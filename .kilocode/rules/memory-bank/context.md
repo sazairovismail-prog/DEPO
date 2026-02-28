@@ -15,6 +15,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] Memory bank documentation
 - [x] Recipe system for common features
 - [x] Excel-like spreadsheet component (Izgara Temalı)
+- [x] Text formatting toolbar (bold, italic, underline, alignment)
 
 ## Current Structure
 
@@ -28,13 +29,14 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 
 ## Current Focus
 
-Added Excel-like spreadsheet component with grid layout. Features:
+Spreadsheet component with text formatting support:
 - 10 columns (A-J) x 20 rows
 - Cell editing functionality
 - Keyboard navigation (Arrow keys, Tab, Enter)
 - Selected cell highlighting
 - Toolbar showing selected cell and value
 - Status bar with row/column count
+- Text formatting: bold, italic, underline, alignment (left/center/right)
 
 ## Quick Start Guide
 
@@ -90,3 +92,4 @@ export async function GET() {
 |------|---------|
 | Initial | Template created with base setup |
 | 2026-02-28 | Added Excel-like spreadsheet component (Izgara Temalı Tablo) |
+| 2026-02-28 | Added text formatting toolbar (bold, italic, underline, alignment) |
