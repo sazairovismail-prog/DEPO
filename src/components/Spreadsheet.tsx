@@ -5,6 +5,12 @@ import { useState, useCallback } from "react";
 type CellData = {
   value: string;
   formula?: string;
+  format?: {
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    align?: 'left' | 'center' | 'right';
+  };
 };
 
 // Formula evaluation function
@@ -73,6 +79,58 @@ export default function Spreadsheet() {
   // Mouse drag selection states
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartCell, setDragStartCell] = useState<string | null>(null);
+
+  // Handle format buttons (bold, italic, underline, alignment, clear)
+  const handleFormat = useCallback((formatType: string) => {
+    if (!selectedCell) return;
+
+    setGridData(prev => {
+      const newGrid = { ...prev };
+      const cellsToFormat = selectedCells.size > 0 ? Array.from(selectedCells) : [selectedCell];
+      
+      cellsToFormat.forEach(cellId => {
+        const currentCell = prev[cellId] || { value: "" };
+        const currentFormat = currentCell.format || {};
+        
+        if (formatType === 'clear') {
+          // Clear cell content and format
+          delete newGrid[cellId];
+        } else if (formatType === 'bold') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, bold: !currentFormat.bold }
+          };
+        } else if (formatType === 'italic') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, italic: !currentFormat.italic }
+          };
+        } else if (formatType === 'underline') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, underline: !currentFormat.underline }
+          };
+        } else if (formatType === 'alignLeft') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, align: 'left' }
+          };
+        } else if (formatType === 'alignCenter') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, align: 'center' }
+          };
+        } else if (formatType === 'alignRight') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, align: 'right' }
+          };
+        }
+      });
+      
+      return newGrid;
+    });
+  }, [selectedCell, selectedCells]);
 
   const getCellId = (col: string, row: number) => `${col}${row}`;
 
@@ -260,6 +318,69 @@ export default function Spreadsheet() {
           <span className="font-medium">Değer:</span>{" "}
           <span className="font-mono">{selectedCell ? gridData[selectedCell]?.value || "" : "-"}</span>
         </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        {/* Toolbar Buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleFormat('bold')}
+            className="px-2 py-1 text-sm font-bold text-gray-700 hover:bg-gray-100 rounded"
+            title="Kalın (B)"
+          >
+            B
+          </button>
+          <button
+            onClick={() => handleFormat('italic')}
+            className="px-2 py-1 text-sm italic text-gray-700 hover:bg-gray-100 rounded"
+            title="İtalik (I)"
+          >
+            I
+          </button>
+          <button
+            onClick={() => handleFormat('underline')}
+            className="px-2 py-1 text-sm underline text-gray-700 hover:bg-gray-100 rounded"
+            title="Altı Çizili (U)"
+          >
+            U
+          </button>
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleFormat('alignLeft')}
+            className="p-1 text-gray-700 hover:bg-gray-100 rounded"
+            title="Sola Hizala"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h10M4 18h14" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleFormat('alignCenter')}
+            className="p-1 text-gray-700 hover:bg-gray-100 rounded"
+            title="Ortala"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M7 12h10M5 18h14" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleFormat('alignRight')}
+            className="p-1 text-gray-700 hover:bg-gray-100 rounded"
+            title="Sağa Hizala"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M10 12h10M6 18h14" />
+            </svg>
+          </button>
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        <button
+          onClick={() => handleFormat('clear')}
+          className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+          title="Temizle"
+        >
+          Temizle
+        </button>
       </div>
 
       {/* Spreadsheet Grid */}
@@ -294,9 +415,20 @@ export default function Spreadsheet() {
                     const isEditing = editingCell === cellId;
                     const cellValue = gridData[cellId]?.value || "";
                     const cellFormula = gridData[cellId]?.formula;
+                    const cellFormat = gridData[cellId]?.format;
                     
                     // Evaluate formula if exists
                     const displayValue = cellFormula ? evaluateFormula(cellFormula, gridData) : cellValue;
+
+                    // Build format classes
+                    const formatClasses = [
+                      cellFormat?.bold ? 'font-bold' : '',
+                      cellFormat?.italic ? 'italic' : '',
+                      cellFormat?.underline ? 'underline' : '',
+                      cellFormat?.align === 'left' ? 'text-left' : 
+                      cellFormat?.align === 'center' ? 'text-center' : 
+                      cellFormat?.align === 'right' ? 'text-right' : '',
+                    ].filter(Boolean).join(' ');
 
                     return (
                       <td
@@ -323,10 +455,10 @@ export default function Spreadsheet() {
                             onChange={(e) => handleCellChange(cellId, e.target.value)}
                             onBlur={handleCellBlur}
                             autoFocus
-                            className="w-full h-full px-2 py-1 text-sm outline-none font-mono"
+                            className={`w-full h-full px-2 py-1 text-sm outline-none font-mono ${formatClasses}`}
                           />
                         ) : (
-                          <div className="w-full h-full px-2 py-1 text-sm font-mono truncate">
+                          <div className={`w-full h-full px-2 py-1 text-sm font-mono truncate ${formatClasses}`}>
                             {displayValue}
                           </div>
                         )}
