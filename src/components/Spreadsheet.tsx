@@ -66,14 +66,65 @@ const ROWS = Array.from({ length: 20 }, (_, i) => i + 1);
 export default function Spreadsheet() {
   const [gridData, setGridData] = useState<GridData>({});
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<string | null>(null);
+  const [lastSelectedCell, setLastSelectedCell] = useState<string | null>(null);
 
   const getCellId = (col: string, row: number) => `${col}${row}`;
 
-  const handleCellClick = useCallback((cellId: string) => {
-    setSelectedCell(cellId);
+  // Helper function to parse cell ID
+  const parseCellId = (cellId: string) => {
+    const col = cellId.charAt(0);
+    const row = parseInt(cellId.substring(1));
+    return { col, row };
+  };
+
+  // Helper function to get all cells in a range
+  const getCellRange = (startCellId: string, endCellId: string): string[] => {
+    const start = parseCellId(startCellId);
+    const end = parseCellId(endCellId);
+    const cells: string[] = [];
+    
+    const startColIndex = COLUMNS.indexOf(start.col);
+    const endColIndex = COLUMNS.indexOf(end.col);
+    const minRow = Math.min(start.row, end.row);
+    const maxRow = Math.max(start.row, end.row);
+    const minColIndex = Math.min(startColIndex, endColIndex);
+    const maxColIndex = Math.max(startColIndex, endColIndex);
+    
+    for (let row = minRow; row <= maxRow; row++) {
+      for (let colIndex = minColIndex; colIndex <= maxColIndex; colIndex++) {
+        cells.push(getCellId(COLUMNS[colIndex], row));
+      }
+    }
+    return cells;
+  };
+
+  const handleCellClick = useCallback((cellId: string, event?: React.MouseEvent) => {
+    if (event?.ctrlKey || event?.metaKey) {
+      // Ctrl/Cmd + Click: Toggle selection
+      setSelectedCells(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(cellId)) {
+          newSet.delete(cellId);
+        } else {
+          newSet.add(cellId);
+        }
+        return newSet;
+      });
+      setLastSelectedCell(cellId);
+    } else if (event?.shiftKey && lastSelectedCell) {
+      // Shift + Click: Range selection
+      const range = getCellRange(lastSelectedCell, cellId);
+      setSelectedCells(new Set(range));
+    } else {
+      // Normal click: Single selection
+      setSelectedCell(cellId);
+      setSelectedCells(new Set([cellId]));
+      setLastSelectedCell(cellId);
+    }
     setEditingCell(cellId);
-  }, []);
+  }, [lastSelectedCell]);
 
   const handleCellChange = useCallback((cellId: string, value: string) => {
     setGridData((prev) => ({
@@ -181,7 +232,8 @@ export default function Spreadsheet() {
                   </th>
                   {COLUMNS.map((col, colIndex) => {
                     const cellId = getCellId(col, row);
-                    const isSelected = selectedCell === cellId;
+                    const isSelected = selectedCells.has(cellId);
+                    const isMultiSelected = selectedCells.size > 1 && selectedCells.has(cellId);
                     const isEditing = editingCell === cellId;
                     const cellValue = gridData[cellId]?.value || "";
                     const cellFormula = gridData[cellId]?.formula;
@@ -193,11 +245,13 @@ export default function Spreadsheet() {
                       <td
                         key={cellId}
                         className={`w-28 h-10 border border-gray-300 p-0 ${
-                          isSelected
+                          isMultiSelected
+                            ? "bg-blue-200 ring-2 ring-blue-400 ring-inset"
+                            : isSelected
                             ? "ring-2 ring-blue-500 ring-inset"
                             : "hover:bg-blue-50"
                         }`}
-                        onClick={() => handleCellClick(cellId)}
+                        onClick={(e) => handleCellClick(cellId, e)}
                         onKeyDown={(e) => handleKeyDown(e, colIndex, row)}
                         tabIndex={isSelected ? 0 : -1}
                       >
@@ -227,9 +281,10 @@ export default function Spreadsheet() {
 
       {/* Status Bar */}
       <div className="bg-gray-200 border-t px-4 py-1 text-xs text-gray-600 flex justify-between">
+        <span>Seçili Hücre: {selectedCell || "- "}</span>
+        <span>Seçili: {selectedCells.size} hücre</span>
         <span>Toplam Satır: {ROWS.length}</span>
         <span>Toplam Sütun: {COLUMNS.length}</span>
-        <span>Hücre Sayısı: {ROWS.length * COLUMNS.length}</span>
       </div>
     </div>
   );
