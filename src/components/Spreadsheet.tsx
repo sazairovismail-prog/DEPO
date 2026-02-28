@@ -110,7 +110,6 @@ export default function Spreadsheet() {
     setDragStartCell(cellId);
     setSelectedCell(cellId);
     setSelectedCells(new Set([cellId]));
-    // Don't enter edit mode on single click - wait for double click
   }, []);
 
   // Handle mouse enter - update selection while dragging
@@ -151,11 +150,12 @@ export default function Spreadsheet() {
       const range = getCellRange(lastSelectedCell, cellId);
       setSelectedCells(new Set(range));
     } else {
-      // Normal click: Single selection (no editing on click)
+      // Normal click: Single selection and enter edit mode
       setSelectedCell(cellId);
       setSelectedCells(new Set([cellId]));
       setLastSelectedCell(cellId);
-      // Don't set editing cell on click - wait for double click or F2
+      // Enter edit mode on click - Excel behavior
+      setEditingCell(cellId);
     }
   }, [lastSelectedCell, isDragging]);
 
