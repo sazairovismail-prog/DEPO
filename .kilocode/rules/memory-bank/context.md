@@ -14,23 +14,27 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] ESLint configuration
 - [x] Memory bank documentation
 - [x] Recipe system for common features
+- [x] Excel-like spreadsheet component (Izgara Temalı)
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/page.tsx` | Home page | ✅ Ready |
+| `src/app/page.tsx` | Home page (Spreadsheet) | ✅ Ready |
 | `src/app/layout.tsx` | Root layout | ✅ Ready |
 | `src/app/globals.css` | Global styles | ✅ Ready |
+| `src/components/Spreadsheet.tsx` | Excel-like grid component | ✅ Ready |
 | `.kilocode/` | AI context & recipes | ✅ Ready |
 
 ## Current Focus
 
-The template is ready. Next steps depend on user requirements:
-
-1. What type of application to build
-2. What features are needed
-3. Design/branding preferences
+Added Excel-like spreadsheet component with grid layout. Features:
+- 10 columns (A-J) x 20 rows
+- Cell editing functionality
+- Keyboard navigation (Arrow keys, Tab, Enter)
+- Selected cell highlighting
+- Toolbar showing selected cell and value
+- Status bar with row/column count
 
 ## Quick Start Guide
 
@@ -85,3 +89,4 @@ export async function GET() {
 | Date | Changes |
 |------|---------|
 | Initial | Template created with base setup |
+| 2026-02-28 | Added Excel-like spreadsheet component (Izgara Temalı Tablo) |
