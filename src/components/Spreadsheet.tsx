@@ -69,7 +69,10 @@ export default function Spreadsheet() {
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<string | null>(null);
   const [lastSelectedCell, setLastSelectedCell] = useState<string | null>(null);
-  const [multiSelectMode, setMultiSelectMode] = useState(false);
+  
+  // Mouse drag selection states
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartCell, setDragStartCell] = useState<string | null>(null);
 
   const getCellId = (col: string, row: number) => `${col}${row}`;
 
@@ -101,8 +104,35 @@ export default function Spreadsheet() {
     return cells;
   };
 
+  // Handle mouse down - start drag selection
+  const handleMouseDown = useCallback((cellId: string) => {
+    setIsDragging(true);
+    setDragStartCell(cellId);
+    setSelectedCell(cellId);
+    setSelectedCells(new Set([cellId]));
+    setEditingCell(cellId);
+  }, []);
+
+  // Handle mouse enter - update selection while dragging
+  const handleMouseEnter = useCallback((cellId: string) => {
+    if (isDragging && dragStartCell) {
+      const range = getCellRange(dragStartCell, cellId);
+      setSelectedCells(new Set(range));
+    }
+  }, [isDragging, dragStartCell]);
+
+  // Handle mouse up - end drag selection
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+    setDragStartCell(null);
+  }, []);
+
+  // Handle cell click (for non-drag multi-select)
   const handleCellClick = useCallback((cellId: string, event?: React.MouseEvent) => {
-    if (multiSelectMode || event?.ctrlKey || event?.metaKey) {
+    // Ignore if we just finished dragging
+    if (isDragging) return;
+    
+    if (event?.ctrlKey || event?.metaKey) {
       // Multi-select mode or Ctrl/Cmd + Click: Toggle selection
       setSelectedCells(prev => {
         const newSet = new Set(prev);
@@ -125,7 +155,7 @@ export default function Spreadsheet() {
       setLastSelectedCell(cellId);
     }
     setEditingCell(cellId);
-  }, [lastSelectedCell, multiSelectMode]);
+  }, [lastSelectedCell, isDragging]);
 
   const handleCellChange = useCallback((cellId: string, value: string) => {
     setGridData((prev) => ({
@@ -193,16 +223,6 @@ export default function Spreadsheet() {
 
       {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4 shadow-sm">
-        <button
-          onClick={() => setMultiSelectMode(!multiSelectMode)}
-          className={`px-3 py-1 text-sm rounded border ${
-            multiSelectMode
-              ? "bg-blue-600 text-white border-blue-600"
-              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-          }`}
-        >
-          {multiSelectMode ? "Çoklu Seçim: AKTİF" : "Çoklu Seçim"}
-        </button>
         <div className="text-sm text-gray-600">
           <span className="font-medium">Seçili Hücre:</span>{" "}
           <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
@@ -255,13 +275,16 @@ export default function Spreadsheet() {
                     return (
                       <td
                         key={cellId}
-                        className={`w-28 h-10 border border-gray-300 p-0 ${
+                        className={`w-28 h-10 border border-gray-300 p-0 cursor-pointer ${
                           isMultiSelected
                             ? "bg-blue-200 ring-2 ring-blue-400 ring-inset"
                             : isSelected
                             ? "ring-2 ring-blue-500 ring-inset"
                             : "hover:bg-blue-50"
                         }`}
+                        onMouseDown={() => handleMouseDown(cellId)}
+                        onMouseEnter={() => handleMouseEnter(cellId)}
+                        onMouseUp={handleMouseUp}
                         onClick={(e) => handleCellClick(cellId, e)}
                         onKeyDown={(e) => handleKeyDown(e, colIndex, row)}
                         tabIndex={isSelected ? 0 : -1}
