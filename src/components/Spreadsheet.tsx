@@ -4,7 +4,59 @@ import { useState, useCallback } from "react";
 
 type CellData = {
   value: string;
+  formula?: string;
 };
+
+// Formula evaluation function
+function evaluateFormula(formula: string, gridData: GridData): string {
+  // Check if it starts with =
+  if (!formula.startsWith("=")) {
+    return formula;
+  }
+
+  // Remove the = and get the expression
+  const expression = formula.substring(1).trim();
+  
+  // Match cell references (e.g., A1, B2, etc.)
+  const cellRefRegex = /([A-J])(\d{1,2})/g;
+  
+  // Replace cell references with their numeric values
+  let parsedExpression = expression.replace(cellRefRegex, (match, col, row) => {
+    const cellId = `${col}${parseInt(row)}`;
+    const cellData = gridData[cellId];
+    
+    if (!cellData) {
+      return "0";
+    }
+    
+    // If the referenced cell also has a formula, evaluate it recursively
+    const value = cellData.formula ? evaluateFormula(cellData.formula, gridData) : cellData.value;
+    
+    // Parse the value as a number
+    const numValue = parseFloat(value);
+    return isNaN(numValue) ? "0" : numValue.toString();
+  });
+
+  // Support basic arithmetic operations: +, -, *, /
+  // Validate the expression contains only numbers, operators, and parentheses
+  if (!/^[\d\s+\-*/().]+$/.test(parsedExpression)) {
+    return formula; // Return formula if invalid
+  }
+
+  try {
+    // Use Function constructor for safe evaluation
+    const result = new Function(`return ${parsedExpression}`)();
+    
+    // Check if result is a valid number
+    if (typeof result === "number" && !isNaN(result)) {
+      // Format result: show integers without decimals, decimals with max 2 places
+      return Number.isInteger(result) ? result.toString() : parseFloat(result.toFixed(2)).toString();
+    }
+    return formula;
+  } catch {
+    return formula; // Return formula if evaluation fails
+  }
+}
 
 type GridData = Record<string, CellData>;
 
@@ -26,7 +78,7 @@ export default function Spreadsheet() {
   const handleCellChange = useCallback((cellId: string, value: string) => {
     setGridData((prev) => ({
       ...prev,
-      [cellId]: { value },
+      [cellId]: { value, formula: value },
     }));
   }, []);
 
@@ -132,6 +184,10 @@ export default function Spreadsheet() {
                     const isSelected = selectedCell === cellId;
                     const isEditing = editingCell === cellId;
                     const cellValue = gridData[cellId]?.value || "";
+                    const cellFormula = gridData[cellId]?.formula;
+                    
+                    // Evaluate formula if exists
+                    const displayValue = cellFormula ? evaluateFormula(cellFormula, gridData) : cellValue;
 
                     return (
                       <td
@@ -156,7 +212,7 @@ export default function Spreadsheet() {
                           />
                         ) : (
                           <div className="w-full h-full px-2 py-1 text-sm font-mono truncate">
-                            {cellValue}
+                            {displayValue}
                           </div>
                         )}
                       </td>
