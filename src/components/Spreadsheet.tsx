@@ -69,6 +69,7 @@ export default function Spreadsheet() {
   const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<string | null>(null);
   const [lastSelectedCell, setLastSelectedCell] = useState<string | null>(null);
+  const [multiSelectMode, setMultiSelectMode] = useState(false);
 
   const getCellId = (col: string, row: number) => `${col}${row}`;
 
@@ -101,8 +102,8 @@ export default function Spreadsheet() {
   };
 
   const handleCellClick = useCallback((cellId: string, event?: React.MouseEvent) => {
-    if (event?.ctrlKey || event?.metaKey) {
-      // Ctrl/Cmd + Click: Toggle selection
+    if (multiSelectMode || event?.ctrlKey || event?.metaKey) {
+      // Multi-select mode or Ctrl/Cmd + Click: Toggle selection
       setSelectedCells(prev => {
         const newSet = new Set(prev);
         if (newSet.has(cellId)) {
@@ -124,7 +125,7 @@ export default function Spreadsheet() {
       setLastSelectedCell(cellId);
     }
     setEditingCell(cellId);
-  }, [lastSelectedCell]);
+  }, [lastSelectedCell, multiSelectMode]);
 
   const handleCellChange = useCallback((cellId: string, value: string) => {
     setGridData((prev) => ({
@@ -192,6 +193,16 @@ export default function Spreadsheet() {
 
       {/* Toolbar */}
       <div className="bg-white border-b px-4 py-2 flex items-center gap-4 shadow-sm">
+        <button
+          onClick={() => setMultiSelectMode(!multiSelectMode)}
+          className={`px-3 py-1 text-sm rounded border ${
+            multiSelectMode
+              ? "bg-blue-600 text-white border-blue-600"
+              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+          }`}
+        >
+          {multiSelectMode ? "Çoklu Seçim: AKTİF" : "Çoklu Seçim"}
+        </button>
         <div className="text-sm text-gray-600">
           <span className="font-medium">Seçili Hücre:</span>{" "}
           <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">
