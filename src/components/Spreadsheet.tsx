@@ -244,8 +244,7 @@ export default function Spreadsheet() {
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-green-600 text-white px-4 py-3 shadow-md">
-        <h1 className="text-xl font-semibold">Excel Benzeri Tablo</h1>
-        <p className="text-sm opacity-80">Izgara Temalı Elektronik Tablo</p>
+        <h1 className="text-xl font-semibold">Data Flow</h1>
       </div>
 
       {/* Toolbar */}
