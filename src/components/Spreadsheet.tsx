@@ -110,7 +110,7 @@ export default function Spreadsheet() {
     setDragStartCell(cellId);
     setSelectedCell(cellId);
     setSelectedCells(new Set([cellId]));
-    setEditingCell(cellId);
+    // Don't enter edit mode on single click - wait for double click
   }, []);
 
   // Handle mouse enter - update selection while dragging
@@ -125,6 +125,8 @@ export default function Spreadsheet() {
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
     setDragStartCell(null);
+    // Close editing mode when drag ends
+    setEditingCell(null);
   }, []);
 
   // Handle cell click (for non-drag multi-select)
@@ -149,13 +151,21 @@ export default function Spreadsheet() {
       const range = getCellRange(lastSelectedCell, cellId);
       setSelectedCells(new Set(range));
     } else {
-      // Normal click: Single selection
+      // Normal click: Single selection (no editing on click)
       setSelectedCell(cellId);
       setSelectedCells(new Set([cellId]));
       setLastSelectedCell(cellId);
+      // Don't set editing cell on click - wait for double click or F2
     }
-    setEditingCell(cellId);
   }, [lastSelectedCell, isDragging]);
+
+  // Handle double click to enter edit mode
+  const handleDoubleClick = useCallback((cellId: string) => {
+    setSelectedCell(cellId);
+    setSelectedCells(new Set([cellId]));
+    setEditingCell(cellId);
+    setLastSelectedCell(cellId);
+  }, []);
 
   const handleCellChange = useCallback((cellId: string, value: string) => {
     setGridData((prev) => ({
@@ -170,47 +180,64 @@ export default function Spreadsheet() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, colIndex: number, row: number) => {
-      if (e.key === "Enter") {
+      // F2 to enter edit mode
+      if (e.key === "F2") {
+        e.preventDefault();
+        if (selectedCell) {
+          setEditingCell(selectedCell);
+        }
+        return;
+      }
+
+      // Enter to confirm and move down
+      if (e.key === "Enter" && editingCell) {
         e.preventDefault();
         setEditingCell(null);
         // Move to next row
         if (row < ROWS.length) {
           const nextCellId = getCellId(COLUMNS[colIndex], row + 1);
           setSelectedCell(nextCellId);
-          setEditingCell(nextCellId);
+          setSelectedCells(new Set([nextCellId]));
         }
-      } else if (e.key === "Tab") {
+      } else if (e.key === "Tab" && editingCell) {
         e.preventDefault();
         setEditingCell(null);
         // Move to next column
         if (colIndex < COLUMNS.length - 1) {
           const nextCellId = getCellId(COLUMNS[colIndex + 1], row);
           setSelectedCell(nextCellId);
-          setEditingCell(nextCellId);
+          setSelectedCells(new Set([nextCellId]));
         }
       } else if (e.key === "ArrowDown" && !editingCell) {
         e.preventDefault();
         const nextCellId = getCellId(COLUMNS[colIndex], row + 1);
         setSelectedCell(nextCellId);
+        setSelectedCells(new Set([nextCellId]));
       } else if (e.key === "ArrowUp" && !editingCell) {
         e.preventDefault();
         const nextCellId = getCellId(COLUMNS[colIndex], row - 1);
         setSelectedCell(nextCellId);
+        setSelectedCells(new Set([nextCellId]));
       } else if (e.key === "ArrowRight" && !editingCell) {
         e.preventDefault();
         if (colIndex < COLUMNS.length - 1) {
           const nextCellId = getCellId(COLUMNS[colIndex + 1], row);
           setSelectedCell(nextCellId);
+          setSelectedCells(new Set([nextCellId]));
         }
       } else if (e.key === "ArrowLeft" && !editingCell) {
         e.preventDefault();
         if (colIndex > 0) {
           const nextCellId = getCellId(COLUMNS[colIndex - 1], row);
           setSelectedCell(nextCellId);
+          setSelectedCells(new Set([nextCellId]));
         }
+      } else if (e.key === "Escape" && editingCell) {
+        e.preventDefault();
+        setEditingCell(null);
       }
     },
-    [editingCell]
+    [editingCell, selectedCell]
   );
 
   return (
@@ -286,6 +313,7 @@ export default function Spreadsheet() {
                         onMouseEnter={() => handleMouseEnter(cellId)}
                         onMouseUp={handleMouseUp}
                         onClick={(e) => handleCellClick(cellId, e)}
+                        onDoubleClick={() => handleDoubleClick(cellId)}
                         onKeyDown={(e) => handleKeyDown(e, colIndex, row)}
                         tabIndex={isSelected ? 0 : -1}
                       >
