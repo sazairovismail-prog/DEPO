@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 type CellData = {
   value: string;
@@ -80,6 +80,11 @@ export default function Spreadsheet() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartCell, setDragStartCell] = useState<string | null>(null);
 
+  // File input ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file save (export to JSON)
+
   // Handle format buttons (bold, italic, underline, alignment, clear)
   const handleFormat = useCallback((formatType: string) => {
     if (!selectedCell) return;
@@ -131,6 +136,42 @@ export default function Spreadsheet() {
       return newGrid;
     });
   }, [selectedCell, selectedCells]);
+
+  // Save grid data to JSON file
+  const handleSave = useCallback(() => {
+    const dataStr = JSON.stringify(gridData, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `spreadsheet-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [gridData]);
+
+  // Load grid data from JSON file
+  const handleLoad = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const loadedData = JSON.parse(content) as GridData;
+        setGridData(loadedData);
+      } catch (error) {
+        alert("Dosya yüklenirken hata oluştu!");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input value to allow loading same file again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, []);
 
   const getCellId = (col: string, row: number) => `${col}${row}`;
 
@@ -381,6 +422,30 @@ export default function Spreadsheet() {
         >
           Temizle
         </button>
+        {/* File operations - pushed to right */}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+            title="Dosya Yükle"
+          >
+            Yükle
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-3 py-1 text-sm bg-green-600 text-white hover:bg-green-700 rounded"
+            title="Dosya Kaydet"
+          >
+            Kaydet
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleLoad}
+            className="hidden"
+          />
+        </div>
       </div>
 
       {/* Spreadsheet Grid */}
