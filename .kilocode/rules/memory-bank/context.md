@@ -17,6 +17,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] Excel-like spreadsheet component (Izgara Temalı)
 - [x] Text formatting toolbar (bold, italic, underline, alignment)
 - [x] File upload and save functionality
+- [x] Offline spreadsheet download (standalone HTML)
 
 ## Current Structure
 
@@ -26,6 +27,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 | `src/app/layout.tsx` | Root layout | ✅ Ready |
 | `src/app/globals.css` | Global styles | ✅ Ready |
 | `src/components/Spreadsheet.tsx` | Excel-like grid component | ✅ Ready |
+| `public/spreadsheet-offline.html` | Offline desktop version | ✅ Ready |
 | `.kilocode/` | AI context & recipes | ✅ Ready |
 
 ## Current Focus
@@ -39,6 +41,7 @@ Spreadsheet component with text formatting support:
 - Status bar with row/column count
 - Text formatting: bold, italic, underline, alignment (left/center/right)
 - File upload (JSON) and save (JSON) functionality
+- **Offline desktop version** - download as standalone HTML file
 
 ## Quick Start Guide
 
@@ -96,3 +99,4 @@ export async function GET() {
 | 2026-02-28 | Added Excel-like spreadsheet component (Izgara Temalı Tablo) |
 | 2026-02-28 | Added text formatting toolbar (bold, italic, underline, alignment) |
 | 2026-02-28 | Added file upload and save functionality (JSON) |
+| 2026-03-01 | Added offline spreadsheet download (standalone HTML)
