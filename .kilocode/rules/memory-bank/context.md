@@ -17,7 +17,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] Excel-like spreadsheet component (Izgara Temalı)
 - [x] Text formatting toolbar (bold, italic, underline, alignment)
 - [x] File upload and save functionality
-- [x] Offline spreadsheet download (standalone HTML)
+- [x] Add offline spreadsheet download (standalone HTML)
 
 ## Current Structure
 
