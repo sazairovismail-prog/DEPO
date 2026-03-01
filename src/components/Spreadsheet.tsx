@@ -10,6 +10,13 @@ type CellData = {
     italic?: boolean;
     underline?: boolean;
     align?: 'left' | 'center' | 'right';
+    fontSize?: number;
+    textColor?: string;
+    bgColor?: string;
+    borderTop?: boolean;
+    borderRight?: boolean;
+    borderBottom?: boolean;
+    borderLeft?: boolean;
   };
 };
 
@@ -80,13 +87,51 @@ export default function Spreadsheet() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartCell, setDragStartCell] = useState<string | null>(null);
 
+  // Undo/Redo history
+  const [history, setHistory] = useState<GridData[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Save current state to history
+  const saveToHistory = useCallback((newGridData: GridData) => {
+    // Remove any future history if we're in the middle
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.parse(JSON.stringify(newGridData)));
+    
+    // Limit history to 50 items
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    } else {
+      setHistoryIndex(newHistory.length - 1);
+    }
+    
+    setHistory(newHistory);
+  }, [history, historyIndex]);
+
+  // Undo function
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setGridData(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  }, [history, historyIndex]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setGridData(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  }, [history, historyIndex]);
 
   // Handle file save (export to JSON)
 
   // Handle format buttons (bold, italic, underline, alignment, clear)
-  const handleFormat = useCallback((formatType: string) => {
+  const handleFormat = useCallback((formatType: string, value?: string | number) => {
     if (!selectedCell) return;
 
     setGridData(prev => {
@@ -129,6 +174,52 @@ export default function Spreadsheet() {
           newGrid[cellId] = {
             ...currentCell,
             format: { ...currentFormat, align: 'right' }
+          };
+        } else if (formatType === 'fontSize' && typeof value === 'number') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, fontSize: value }
+          };
+        } else if (formatType === 'textColor' && typeof value === 'string') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, textColor: value }
+          };
+        } else if (formatType === 'bgColor' && typeof value === 'string') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, bgColor: value }
+          };
+        } else if (formatType === 'borderTop') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, borderTop: !currentFormat.borderTop }
+          };
+        } else if (formatType === 'borderRight') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, borderRight: !currentFormat.borderRight }
+          };
+        } else if (formatType === 'borderBottom') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, borderBottom: !currentFormat.borderBottom }
+          };
+        } else if (formatType === 'borderLeft') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { ...currentFormat, borderLeft: !currentFormat.borderLeft }
+          };
+        } else if (formatType === 'borderAll') {
+          newGrid[cellId] = {
+            ...currentCell,
+            format: { 
+              ...currentFormat, 
+              borderTop: !currentFormat.borderTop,
+              borderRight: !currentFormat.borderRight,
+              borderBottom: !currentFormat.borderBottom,
+              borderLeft: !currentFormat.borderLeft
+            }
           };
         }
       });
@@ -267,11 +358,16 @@ export default function Spreadsheet() {
   }, []);
 
   const handleCellChange = useCallback((cellId: string, value: string) => {
-    setGridData((prev) => ({
-      ...prev,
-      [cellId]: { value, formula: value },
-    }));
-  }, []);
+    setGridData((prev) => {
+      const newGrid = {
+        ...prev,
+        [cellId]: { value, formula: value },
+      };
+      // Save to history
+      saveToHistory(newGrid);
+      return newGrid;
+    });
+  }, [saveToHistory]);
 
   const handleCellBlur = useCallback(() => {
     setEditingCell(null);
@@ -440,6 +536,109 @@ export default function Spreadsheet() {
           </button>
         </div>
         <div className="h-6 w-px bg-gray-300"></div>
+        {/* Undo/Redo buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleUndo}
+            disabled={historyIndex <= 0}
+            className={`p-1 rounded ${historyIndex <= 0 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+            title="Geri Al (Ctrl+Z)"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+          </button>
+          <button
+            onClick={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+            className={`p-1 rounded ${historyIndex >= history.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
+            title="Yeniden Yap (Ctrl+Y)"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6" />
+            </svg>
+          </button>
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        {/* Font Size */}
+        <div className="flex items-center gap-1">
+          <select
+            onChange={(e) => handleFormat('fontSize', parseInt(e.target.value))}
+            className="text-sm border rounded px-1 py-0.5"
+            title="Yazı Boyutu"
+          >
+            <option value="">Boyut</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="24">24</option>
+            <option value="28">28</option>
+            <option value="36">36</option>
+          </select>
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        {/* Text Color */}
+        <div className="flex items-center gap-1">
+          <input
+            type="color"
+            onChange={(e) => handleFormat('textColor', e.target.value)}
+            className="w-8 h-8 cursor-pointer rounded"
+            title="Yazı Rengi"
+          />
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        {/* Background Color */}
+        <div className="flex items-center gap-1">
+          <input
+            type="color"
+            onChange={(e) => handleFormat('bgColor', e.target.value)}
+            className="w-8 h-8 cursor-pointer rounded"
+            title="Dolgu Rengi"
+          />
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
+        {/* Borders */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleFormat('borderAll')}
+            className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded border"
+            title="Tüm Kenarlıklar"
+          >
+            ▦
+          </button>
+          <button
+            onClick={() => handleFormat('borderTop')}
+            className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            title="Üst Kenarlık"
+          >
+            ▬
+          </button>
+          <button
+            onClick={() => handleFormat('borderBottom')}
+            className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            title="Alt Kenarlık"
+          >
+            ▬
+          </button>
+          <button
+            onClick={() => handleFormat('borderLeft')}
+            className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            title="Sol Kenarlık"
+          >
+            │
+          </button>
+          <button
+            onClick={() => handleFormat('borderRight')}
+            className="px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            title="Sağ Kenarlık"
+          >
+            │
+          </button>
+        </div>
+        <div className="h-6 w-px bg-gray-300"></div>
         <button
           onClick={() => handleFormat('clear')}
           className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
@@ -520,6 +719,17 @@ export default function Spreadsheet() {
                       cellFormat?.align === 'right' ? 'text-right' : '',
                     ].filter(Boolean).join(' ');
 
+                    // Build inline styles
+                    const cellStyle: React.CSSProperties = {
+                      fontSize: cellFormat?.fontSize ? `${cellFormat.fontSize}px` : undefined,
+                      color: cellFormat?.textColor || 'inherit',
+                      backgroundColor: cellFormat?.bgColor || (isSelected ? '#eff6ff' : isMultiSelected ? '#dbeafe' : undefined),
+                      borderTop: cellFormat?.borderTop ? '2px solid #000' : undefined,
+                      borderBottom: cellFormat?.borderBottom ? '2px solid #000' : undefined,
+                      borderLeft: cellFormat?.borderLeft ? '2px solid #000' : undefined,
+                      borderRight: cellFormat?.borderRight ? '2px solid #000' : undefined,
+                    };
+
                     return (
                       <td
                         key={cellId}
@@ -530,6 +740,7 @@ export default function Spreadsheet() {
                             ? "ring-2 ring-blue-500 ring-inset"
                             : "hover:bg-blue-50"
                         }`}
+                        style={cellStyle}
                         onMouseDown={() => handleMouseDown(cellId)}
                         onMouseEnter={() => handleMouseEnter(cellId)}
                         onMouseUp={handleMouseUp}
@@ -546,9 +757,20 @@ export default function Spreadsheet() {
                             onBlur={handleCellBlur}
                             autoFocus
                             className={`w-full h-full px-2 py-1 text-sm outline-none font-mono ${formatClasses}`}
+                            style={{ 
+                              fontSize: cellFormat?.fontSize ? `${cellFormat.fontSize}px` : undefined,
+                              color: cellFormat?.textColor || 'inherit',
+                              backgroundColor: cellFormat?.bgColor || 'transparent',
+                            }}
                           />
                         ) : (
-                          <div className={`w-full h-full px-2 py-1 text-sm font-mono truncate ${formatClasses}`}>
+                          <div 
+                            className={`w-full h-full px-2 py-1 text-sm font-mono truncate ${formatClasses}`}
+                            style={{ 
+                              fontSize: cellFormat?.fontSize ? `${cellFormat.fontSize}px` : undefined,
+                              color: cellFormat?.textColor || 'inherit',
+                            }}
+                          >
                             {displayValue}
                           </div>
                         )}
