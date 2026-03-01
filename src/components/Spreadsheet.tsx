@@ -80,24 +80,6 @@ export default function Spreadsheet() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartCell, setDragStartCell] = useState<string | null>(null);
 
-  // Download offline spreadsheet HTML file
-  const handleDownloadOffline = useCallback(async () => {
-    try {
-      const response = await fetch('/spreadsheet-offline.html');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'spreadsheet-offline.html';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download failed:', error);
-    }
-  }, []);
-
   // File input ref
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -442,13 +424,6 @@ export default function Spreadsheet() {
         </button>
         {/* File operations - pushed to right */}
         <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={handleDownloadOffline}
-            className="px-3 py-1 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded"
-            title="Masaüstüne İndir"
-          >
-            📥 Masaüstüne İndir
-          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
