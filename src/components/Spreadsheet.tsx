@@ -81,15 +81,23 @@ export default function Spreadsheet() {
   const [dragStartCell, setDragStartCell] = useState<string | null>(null);
 
   // Download offline spreadsheet HTML file
-  const handleDownloadOffline = useCallback(() => {
-    // Create a link element and use click to download
-    const link = document.createElement('a');
-    link.href = '/spreadsheet-offline.html';
-    link.download = 'spreadsheet-offline.html';
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadOffline = useCallback(async () => {
+    try {
+      // Fetch the file content first, then download as blob
+      const response = await fetch('/spreadsheet-offline.html');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'spreadsheet-offline.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('İndirme başarısız oldu!');
+    }
   }, []);
 
   // File input ref
