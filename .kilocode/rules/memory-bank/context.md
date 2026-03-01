@@ -18,6 +18,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] Text formatting toolbar (bold, italic, underline, alignment)
 - [x] File upload and save functionality
 - [x] Add offline spreadsheet download (standalone HTML)
+- [x] Fix download button to download file instead of opening in new tab
 
 ## Current Structure
 
