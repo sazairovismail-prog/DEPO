@@ -82,21 +82,14 @@ export default function Spreadsheet() {
 
   // Download offline spreadsheet HTML file
   const handleDownloadOffline = useCallback(() => {
-    fetch('/spreadsheet-offline.html')
-      .then(response => response.blob())
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'spreadsheet-offline.html';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      })
-      .catch(error => {
-        console.error('Download failed:', error);
-      });
+    // Create a link element and use click to download
+    const link = document.createElement('a');
+    link.href = '/spreadsheet-offline.html';
+    link.download = 'spreadsheet-offline.html';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }, []);
 
   // File input ref
