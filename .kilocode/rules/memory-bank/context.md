@@ -19,6 +19,7 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
 - [x] File upload and save functionality
 - [x] Add offline spreadsheet download (standalone HTML)
 - [x] Fix download button to download file instead of opening in new tab
+- [x] Add Excel-like features: undo/redo, font size, text/bg color, borders
 
 ## Current Structure
 
@@ -43,6 +44,11 @@ Spreadsheet component with text formatting support:
 - Text formatting: bold, italic, underline, alignment (left/center/right)
 - File upload (JSON) and save (JSON) functionality
 - **Offline desktop version** - download as standalone HTML file
+- **NEW: Undo/Redo** - History tracking with Ctrl+Z / Ctrl+Y
+- **NEW: Font Size** - Change font size (10-36px)
+- **NEW: Text Color** - Change text color
+- **NEW: Background Color** - Change cell fill color
+- **NEW: Cell Borders** - Add borders (top, bottom, left, right, all)
 
 ## Quick Start Guide
 
