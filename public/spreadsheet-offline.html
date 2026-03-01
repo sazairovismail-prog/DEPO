@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elektronik Tablo - Spreadsheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 10px;
+            border-right: 1px solid #ddd;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #e9ecef;
+        }
+
+        .toolbar button.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        .cell-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 8px 16px;
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .cell-info span {
+            font-weight: 500;
+        }
+
+        .spreadsheet-container {
+            overflow: auto;
+            max-height: 70vh;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 0;
+            min-width: 100px;
+            height: 28px;
+        }
+
+        th {
+            background: #f0f0f0;
+            font-weight: 600;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th.row-header {
+            width: 50px;
+            min-width: 50px;
+            position: sticky;
+            left: 0;
+            z-index: 11;
+        }
+
+        th.corner {
+            position: sticky;
+            left: 0;
+            top: 0;
+            z-index: 12;
+        }
+
+        td {
+            background: white;
+        }
+
+        td.selected {
+            outline: 2px solid #0d6efd;
+            outline-offset: -1px;
+            background: #e7f1ff;
+        }
+
+        td input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            padding: 4px 8px;
+            font-size: 13px;
+            outline: none;
+            background: transparent;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .file-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .file-buttons input[type="file"] {
+            display: none;
+        }
+
+        .file-buttons label {
+            padding: 6px 12px;
+            border: 1px solid #28a745;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #28a745;
+            transition: all 0.2s;
+        }
+
+        .file-buttons label:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        .file-buttons button {
+            padding: 6px 12px;
+            border: 1px solid #28a745;
+            background: #28a745;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .file-buttons button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbar">
+            <div class="toolbar-group">
+                <button id="boldBtn" title="Kalın (Ctrl+B)"><b>B</b></button>
+                <button id="italicBtn" title="İtalik (Ctrl+I)"><i>I</i></button>
+                <button id="underlineBtn" title="Altı Çizili (Ctrl+U)"><u>U</u></button>
+            </div>
+            <div class="toolbar-group">
+                <button id="alignLeftBtn" title="Sola Hizala">☰</button>
+                <button id="alignCenterBtn" title="Ortala">☷</button>
+                <button id="alignRightBtn" title="Sağa Hizala">▷</button>
+            </div>
+            <div class="toolbar-group file-buttons">
+                <label for="fileInput">📂 Dosya Yükle</label>
+                <input type="file" id="fileInput" accept=".json">
+                <button id="saveBtn">💾 Dosya Kaydet</button>
+            </div>
+        </div>
+        
+        <div class="cell-info">
+            <div>Seçili Hücre: <span id="selectedCell">-</span></div>
+            <div>Değer: <span id="cellValue">-</span></div>
+        </div>
+        
+        <div class="spreadsheet-container">
+            <table id="spreadsheet">
+                <thead>
+                    <tr>
+                        <th class="row-header corner"></th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                        <th>D</th>
+                        <th>E</th>
+                        <th>F</th>
+                        <th>G</th>
+                        <th>H</th>
+                        <th>I</th>
+                        <th>J</th>
+                    </tr>
+                </thead>
+                <tbody id="spreadsheetBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="status-bar">
+            <div>Satır: <span id="rowCount">20</span> | Sütun: <span id="colCount">10</span></div>
+            <div>Hazır</div>
+        </div>
+    </div>
+
+    <script>
+        const COLS = 10;
+        const ROWS = 20;
+        const COL_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        
+        let selectedCell = null;
+        let cellData = {};
+        
+        // Initialize spreadsheet
+        function initSpreadsheet() {
+            const tbody = document.getElementById('spreadsheetBody');
+            tbody.innerHTML = '';
+            
+            for (let row = 1; row <= ROWS; row++) {
+                const tr = document.createElement('tr');
+                
+                // Row header
+                const th = document.createElement('th');
+                th.className = 'row-header';
+                th.textContent = row;
+                tr.appendChild(th);
+                
+                // Cells
+                for (let col = 0; col < COLS; col++) {
+                    const td = document.createElement('td');
+                    td.dataset.row = row;
+                    td.dataset.col = col;
+                    td.dataset.colLabel = COL_LABELS[col];
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.addEventListener('focus', () => selectCell(td));
+                    input.addEventListener('input', (e) => updateCellData(row, col, e.target.value));
+                    input.addEventListener('keydown', handleKeyDown);
+                    
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                }
+                
+                tbody.appendChild(tr);
+            }
+        }
+        
+        // Select cell
+        function selectCell(td) {
+            // Deselect previous
+            if (selectedCell) {
+                selectedCell.classList.remove('selected');
+            }
+            
+            selectedCell = td;
+            td.classList.add('selected');
+            
+            const row = td.dataset.row;
+            const colLabel = td.dataset.colLabel;
+            const cellId = `${colLabel}${row}`;
+            
+            document.getElementById('selectedCell').textContent = cellId;
+            
+            const data = cellData[`${row}-${td.dataset.col}`];
+            document.getElementById('cellValue').textContent = data ? data.value : '';
+            
+            updateToolbarState();
+        }
+        
+        // Update cell data
+        function updateCellData(row, col, value) {
+            const key = `${row}-${col}`;
+            if (!cellData[key]) {
+                cellData[key] = { value: '', style: {} };
+            }
+            cellData[key].value = value;
+        }
+        
+        // Handle keyboard navigation
+        function handleKeyDown(e) {
+            if (!selectedCell) return;
+            
+            const row = parseInt(selectedCell.dataset.row);
+            const col = parseInt(selectedCell.dataset.col);
+            
+            let newRow = row;
+            let newCol = col;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    newRow = Math.max(1, row - 1);
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    newRow = Math.min(ROWS, row + 1);
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                    newCol = Math.max(0, col - 1);
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                    newCol = Math.min(COLS - 1, col + 1);
+                    e.preventDefault();
+                    break;
+                case 'Tab':
+                    if (e.shiftKey) {
+                        newCol = Math.max(0, col - 1);
+                    } else {
+                        newCol = Math.min(COLS - 1, col + 1);
+                    }
+                    e.preventDefault();
+                    break;
+                case 'Enter':
+                    if (e.shiftKey) {
+                        newRow = Math.max(1, row - 1);
+                    } else {
+                        newRow = Math.min(ROWS, row + 1);
+                    }
+                    e.preventDefault();
+                    break;
+                case 'b':
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleStyle('bold');
+                        e.preventDefault();
+                    }
+                    break;
+                case 'i':
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleStyle('italic');
+                        e.preventDefault();
+                    }
+                    break;
+                case 'u':
+                    if (e.ctrlKey || e.metaKey) {
+                        toggleStyle('underline');
+                        e.preventDefault();
+                    }
+                    break;
+            }
+            
+            if (newRow !== row || newCol !== col) {
+                const newTd = document.querySelector(`td[data-row="${newRow}"][data-col="${newCol}"]`);
+                if (newTd) {
+                    const input = newTd.querySelector('input');
+                    input.focus();
+                }
+            }
+        }
+        
+        // Toggle style
+        function toggleStyle(style) {
+            if (!selectedCell) return;
+            
+            const row = selectedCell.dataset.row;
+            const col = selectedCell.dataset.col;
+            const key = `${row}-${col}`;
+            
+            if (!cellData[key]) {
+                cellData[key] = { value: '', style: {} };
+            }
+            
+            const currentStyle = cellData[key].style || {};
+            currentStyle[style] = !currentStyle[style];
+            cellData[key].style = currentStyle;
+            
+            applyStyle(selectedCell);
+        }
+        
+        // Apply style to cell
+        function applyStyle(td) {
+            const row = td.dataset.row;
+            const col = td.dataset.col;
+            const key = `${row}-${col}`;
+            const data = cellData[key];
+            
+            if (!data || !data.style) return;
+            
+            const input = td.querySelector('input');
+            const style = data.style;
+            
+            input.style.fontWeight = style.bold ? 'bold' : 'normal';
+            input.style.fontStyle = style.italic ? 'italic' : 'normal';
+            input.style.textDecoration = style.underline ? 'underline' : 'none';
+            input.style.textAlign = style.align || 'left';
+        }
+        
+        // Update toolbar state
+        function updateToolbarState() {
+            if (!selectedCell) return;
+            
+            const row = selectedCell.dataset.row;
+            const col = selectedCell.dataset.col;
+            const key = `${row}-${col}`;
+            const data = cellData[key];
+            const style = data && data.style ? data.style : {};
+            
+            document.getElementById('boldBtn').classList.toggle('active', style.bold);
+            document.getElementById('italicBtn').classList.toggle('active', style.italic);
+            document.getElementById('underlineBtn').classList.toggle('active', style.underline);
+            
+            document.getElementById('alignLeftBtn').classList.toggle('active', style.align === 'left' || !style.align);
+            document.getElementById('alignCenterBtn').classList.toggle('active', style.align === 'center');
+            document.getElementById('alignRightBtn').classList.toggle('active', style.align === 'right');
+        }
+        
+        // Set alignment
+        function setAlignment(align) {
+            if (!selectedCell) return;
+            
+            const row = selectedCell.dataset.row;
+            const col = selectedCell.dataset.col;
+            const key = `${row}-${col}`;
+            
+            if (!cellData[key]) {
+                cellData[key] = { value: '', style: {} };
+            }
+            
+            cellData[key].style = cellData[key].style || {};
+            cellData[key].style.align = align;
+            
+            applyStyle(selectedCell);
+            updateToolbarState();
+        }
+        
+        // Save file
+        function saveFile() {
+            const data = {
+                version: 1,
+                cells: cellData
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spreadsheet.json';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        }
+        
+        // Load file
+        function loadFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.cells) {
+                        cellData = data.cells;
+                        
+                        // Apply data to cells
+                        for (const [key, value] of Object.entries(cellData)) {
+                            const [row, col] = key.split('-').map(Number);
+                            const td = document.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
+                            if (td) {
+                                const input = td.querySelector('input');
+                                input.value = value.value || '';
+                                if (value.style) {
+                                    cellData[key].style = value.style;
+                                    applyStyle(td);
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    alert('Dosya yüklenirken hata oluştu!');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // Event listeners
+        document.getElementById('boldBtn').addEventListener('click', () => toggleStyle('bold'));
+        document.getElementById('italicBtn').addEventListener('click', () => toggleStyle('italic'));
+        document.getElementById('underlineBtn').addEventListener('click', () => toggleStyle('underline'));
+        
+        document.getElementById('alignLeftBtn').addEventListener('click', () => setAlignment('left'));
+        document.getElementById('alignCenterBtn').addEventListener('click', () => setAlignment('center'));
+        document.getElementById('alignRightBtn').addEventListener('click', () => setAlignment('right'));
+        
+        document.getElementById('saveBtn').addEventListener('click', saveFile);
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                loadFile(e.target.files[0]);
+            }
+        });
+        
+        // Initialize
+        initSpreadsheet();
+    </script>
+</body>
+</html>

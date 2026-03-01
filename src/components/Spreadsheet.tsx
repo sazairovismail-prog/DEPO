@@ -425,6 +425,13 @@ export default function Spreadsheet() {
         {/* File operations - pushed to right */}
         <div className="ml-auto flex items-center gap-2">
           <button
+            onClick={() => window.open('/spreadsheet-offline.html', '_blank')}
+            className="px-3 py-1 text-sm bg-purple-600 text-white hover:bg-purple-700 rounded"
+            title="Masaüstüne İndir"
+          >
+            📥 Masaüstüne İndir
+          </button>
+          <button
             onClick={() => fileInputRef.current?.click()}
             className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
             title="Dosya Yükle"
