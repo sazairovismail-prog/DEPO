@@ -344,23 +344,9 @@ export default function Spreadsheet() {
       {/* Header with download button */}
       <div className="bg-blue-600 text-white px-4 py-3 shadow-md flex justify-between items-center">
         <h1 className="text-xl font-semibold">Data Flow</h1>
-        <button
-          onClick={async () => {
-            try {
-              const response = await fetch('/spreadsheet-offline.html');
-              const blob = await response.blob();
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = url;
-              link.download = 'spreadsheet-offline.html';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              URL.revokeObjectURL(url);
-            } catch (error) {
-              console.error('İndirme hatası:', error);
-            }
-          }}
+        <a
+          href="/spreadsheet-offline.html"
+          download="spreadsheet-offline.html"
           className="p-2 bg-blue-700 hover:bg-blue-800 rounded flex items-center gap-2"
           title="Masaüstüne İndir"
         >
@@ -368,7 +354,7 @@ export default function Spreadsheet() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
           <span className="text-sm font-medium">İndir</span>
-        </button>
+        </a>
       </div>
 
       {/* Toolbar */}
