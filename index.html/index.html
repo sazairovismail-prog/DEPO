@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Sesli Not Asistanı Ultra Pro | Enterprise</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #eef2f3;
+            --container-bg: rgba(255, 255, 255, 0.75);
+            --text-color: #2d3436;
+            --sidebar-bg: rgba(255, 255, 255, 0.85);
+            --accent-color: #6c5ce7;
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        .dark-mode {
+            --bg-color: #0f0c29;
+            --container-bg: rgba(20, 30, 48, 0.8);
+            --text-color: #dfe6e9;
+            --sidebar-bg: rgba(44, 62, 80, 0.8);
+            --accent-color: #a29bfe;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, var(--bg-color), #8e9eab); 
+            color: var(--text-color); 
+            height: 100vh; margin: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            transition: 0.3s; overflow: hidden;
+        }
+
+        .main-wrapper { display: flex; width: 95%; max-width: 1300px; height: 90vh; gap: 20px; }
+        
+        .sidebar, .container { 
+            backdrop-filter: blur(15px); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 24px; 
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15); 
+        }
+
+        .sidebar { flex: 1; background: var(--sidebar-bg); padding: 25px; overflow-y: auto; }
+        .container { flex: 2; background: var(--container-bg); padding: 35px; text-align: center; display: flex; flex-direction: column; gap: 15px; position: relative; }
+
+        input, select, #yazi-alani {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0,0,0,0.1);
+            color: var(--text-color);
+            padding: 12px; border-radius: 12px; font-family: inherit; width: 100%;
+        }
+
+        #not-listesi { list-style: none; padding: 0; }
+        #not-listesi li { 
+            background: rgba(255, 255, 255, 0.1); padding: 15px; margin-bottom: 12px; border-radius: 15px; 
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            border-left: 6px solid var(--accent-color); transition: 0.3s;
+        }
+        #not-listesi li:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.2); }
+
+        button { padding: 12px 20px; font-size: 14px; cursor: pointer; border-radius: 12px; border: none; color: white; transition: 0.3s; font-weight: 600; }
+        #baslat { background: #6c5ce7; }
+        #durdur { background: #ff7675; }
+        #kaydet { background: #00b894; }
+        
+        .aksiyon-btn { padding: 8px; border-radius: 8px; font-size: 14px; margin-left: 5px; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-indir { background: #0984e3; }
+        .btn-sil { background: #d63031; }
+        .btn-dinle { background: #fdcb6e; }
+
+        #yazi-alani { 
+            margin-top: 10px; flex-grow: 1; font-size: 1.1rem; text-align: left; 
+            overflow-y: auto; outline: none; border: 2px dashed var(--accent-color);
+            padding: 20px;
+        }
+
+        .listening { animation: pulse 1.5s infinite; border-color: #ff7675 !important; border-style: solid; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 118, 117, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 118, 117, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 118, 117, 0); } }
+
+        .kategori-tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; background: var(--accent-color); color: white; display: inline-block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="sidebar">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+            <h2 style="margin:0">Notlarım</h2>
+            <button onclick="toggleTheme()" style="background:var(--accent-color); padding:8px 12px;">🌓</button>
+        </div>
+        <input type="text" id="arama-kutusu" placeholder="Notlarda ara..." onkeyup="notAra()" style="margin-bottom:20px;">
+        <ul id="not-listesi"></ul>
+    </div>
+
+    <div class="container">
+        <h1 style="margin-top:0">🎙️ Sesli Not Asistanı</h1>
+        
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="not-baslik" placeholder="Not Başlığı...">
+            <select id="not-kategori" style="width: 150px;">
+                <option value="Genel">📂 Genel</option>
+                <option value="İş">💼 İş</option>
+                <option value="Fikir">💡 Fikir</option>
+                <option value="Önemli">🚨 Önemli</option>
+            </select>
+        </div>
+
+        <div style="display:flex; gap:10px; width:100%;">
+            <button id="baslat" style="flex:1">🎤 Başlat</button>
+            <button id="durdur" style="flex:1">🛑 Durdur</button>
+            <button id="kaydet" style="flex:1">💾 Kaydet</button>
+        </div>
+
+        <div id="yazi-alani" contenteditable="true">Dinlemeye başlamak için Başlat'a basın veya buraya yazın...</div>
+        
+        <div style="display:flex; justify-content: space-between; font-size:12px; color:#888; font-weight: 500;">
+            <div>Karakter: <span id="char-count" style="color:var(--accent-color)">0</span> | Kelime: <span id="word-count" style="color:var(--accent-color)">0</span></div>
+            <div id="status-text" style="font-weight:bold">Hazır</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const taniyici = new Recognition();
+    taniyici.lang = 'tr-TR';
+    taniyici.continuous = true;
+    taniyici.interimResults = true;
+
+    const kutu = document.getElementById('yazi-alani');
+    const liste = document.getElementById('not-listesi');
+    const baslikInput = document.getElementById('not-baslik');
+    const kategoriInput = document.getElementById('not-kategori');
+    const statusText = document.getElementById('status-text');
+
+    let notlar = JSON.parse(localStorage.getItem('sesliNotlar')) || [];
+    let finalTranscript = '';
+
+    function sayacGuncelle() {
+        const text = kutu.innerText.trim();
+        const varsayilanMesaj = "Dinlemeye başlamak için Başlat'a basın veya buraya yazın...";
+        const cleanText = (text === varsayilanMesaj) ? "" : text;
+        
+        document.getElementById('char-count').innerText = cleanText.length;
+        document.getElementById('word-count').innerText = cleanText.length > 0 ? cleanText.split(/\s+/).length : 0;
+    }
+
+    kutu.addEventListener('input', sayacGuncelle);
+
+    taniyici.onresult = (event) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript + ' ';
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        kutu.innerHTML = `<span>${finalTranscript}</span><span style="color:gray">${interimTranscript}</span>`;
+        sayacGuncelle();
+    };
+
+    document.getElementById('baslat').onclick = () => { 
+        if(kutu.innerText.startsWith("Dinlemeye başlamak")) {
+            kutu.innerText = "";
+            finalTranscript = "";
+        }
+        taniyici.start(); 
+        kutu.classList.add('listening');
+        statusText.innerText = "🔴 Dinleniyor...";
+    };
+
+    document.getElementById('durdur').onclick = () => { 
+        taniyici.stop(); 
+        window.speechSynthesis.cancel(); // Okuma varsa onu da durdurur
+        kutu.classList.remove('listening');
+        statusText.innerText = "Durduruldu";
+        sayacGuncelle();
+    };
+
+    document.getElementById('kaydet').onclick = notKaydet;
+
+    function notKaydet() {
+        const metin = kutu.innerText.trim();
+        if (metin.length < 2 || metin.startsWith("Dinlemeye başlamak")) return;
+
+        let baslik = baslikInput.value || metin.split(' ').slice(0, 3).join(' ') + "...";
+
+        const yeniNot = {
+            baslik: baslik,
+            metin: metin,
+            kategori: kategoriInput.value,
+            tarih: new Date().toLocaleString('tr-TR')
+        };
+
+        notlar.unshift(yeniNot);
+        localStorage.setItem('sesliNotlar', JSON.stringify(notlar));
+        
+        baslikInput.value = '';
+        finalTranscript = '';
+        kutu.innerText = "Dinlemeye başlamak için Başlat'a basın veya buraya yazın...";
+        kutu.classList.remove('listening');
+        notlariGoster();
+        sayacGuncelle();
+    }
+
+    // --- SESLİ OKUMA FONKSİYONU (YENİ EKLENDİ) ---
+    function asistanKonus(metin) {
+        window.speechSynthesis.cancel(); // Önceki okumayı durdur
+        if (!metin) return;
+
+        const konusmaci = new SpeechSynthesisUtterance(metin);
+        konusmaci.lang = 'tr-TR';
+        konusmaci.rate = 1.1;
+        window.speechSynthesis.speak(konusmaci);
+    }
+
+    function notlariGoster() {
+        liste.innerHTML = '';
+        notlar.forEach((not, index) => {
+            const li = document.createElement('li');
+            // Kaçış karakterlerini temizle
+            const temizMetin = not.metin.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            
+            li.innerHTML = `
+                <div onclick="notuYukle(${index})" style="flex:1">
+                    <span class="kategori-tag">${not.kategori}</span><br>
+                    <strong>${not.baslik}</strong><br><small>${not.tarih}</small>
+                </div>
+                <div style="display:flex; gap:2px;">
+                    <button title="Dinle" class="aksiyon-btn btn-dinle" onclick="event.stopPropagation(); asistanKonus('${temizMetin}')">🔊</button>
+                    <button title="İndir" class="aksiyon-btn btn-indir" onclick="event.stopPropagation(); indir('${temizMetin}', '${not.baslik}')">📥</button>
+                    <button title="Sil" class="aksiyon-btn btn-sil" onclick="event.stopPropagation(); notSil(${index})">🗑️</button>
+                </div>
+            `;
+            liste.appendChild(li);
+        });
+    }
+
+    function indir(metin, baslik) {
+        const element = document.createElement('a');
+        const dosya = new Blob([metin], {type: 'text/plain'});
+        element.href = URL.createObjectURL(dosya);
+        element.download = baslik + ".txt";
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
+
+    function notuYukle(index) {
+        const n = notlar[index];
+        finalTranscript = n.metin;
+        kutu.innerHTML = n.metin;
+        baslikInput.value = n.baslik;
+        kategoriInput.value = n.kategori;
+        sayacGuncelle();
+    }
+
+    function notSil(index) {
+        if(confirm("Bu notu silmek istediğinize emin misiniz?")) {
+            notlar.splice(index, 1);
+            localStorage.setItem('sesliNotlar', JSON.stringify(notlar));
+            notlariGoster();
+        }
+    }
+
+    function notAra() {
+        const ara = document.getElementById('arama-kutusu').value.toLowerCase();
+        const li = liste.getElementsByTagName('li');
+        for (let i = 0; i < li.length; i++) {
+            const metin = li[i].innerText.toLowerCase();
+            li[i].style.display = metin.includes(ara) ? "" : "none";
+        }
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+    }
+
+    notlariGoster();
+</script>
+
+</body>
+</html>
