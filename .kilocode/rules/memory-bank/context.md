@@ -1,109 +1,80 @@
-# Active Context: Next.js Starter Template
+# Active Context: E-Ticaret Sitesi (Marketim)
 
 ## Current State
 
-**Template Status**: ✅ Ready for development
+**Project Status**: ✅ E-ticaret sitesi tamamlandı ve production build başarılı
 
-The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. It's ready for AI-assisted expansion to build any type of application.
+Next.js 16 + React 19 + Tailwind CSS 4 ile Türkçe e-ticaret sitesi. Kategorize ürünler, sepete ekleme, localStorage ile kalıcı sepet ve responsive tasarım ile tamamen işlevsel bir online mağaza.
 
 ## Recently Completed
 
-- [x] Base Next.js 16 setup with App Router
-- [x] TypeScript configuration with strict mode
-- [x] Tailwind CSS 4 integration
-- [x] ESLint configuration
-- [x] Memory bank documentation
-- [x] Recipe system for common features
-- [x] Excel-like spreadsheet component (Izgara Temalı)
-- [x] Text formatting toolbar (bold, italic, underline, alignment)
-- [x] File upload and save functionality
-- [x] Add offline spreadsheet download (standalone HTML)
-- [x] Fix download button to download file instead of opening in new tab
-- [x] Add Excel-like features: undo/redo, font size, text/bg color, borders
+- [x] E-ticaret sitesi temel yapısı oluşturuldu
+- [x] Ürün verisi ve kategori sistemi eklendi
+- [x] React Context yerine localStorage ile sepet yönetimi
+- [x] Header (navigasyon + sepet ikonu) oluşturuldu
+- [x] Footer (iletişim + linkler) oluşturuldu
+- [x] Ana sayfa (hero bölümü + öne çıkan ürünler)
+- [x] Ürünler sayfası (kategori filtreleme + arama)
+- [x] Ürün detay sayfası (benzer ürünler + adet seçimi)
+- [x] Sepet sayfası (adet güncelleme + özet + kargo)
+- [x] ProductCard ve CartItem bileşenleri
+- [x] Responsive tasarım (mobil + masaüstü)
+- [x] Production build başarılı
+- [x] Typecheck ve lint geçti
 
 ## Current Structure
 
 | File/Directory | Purpose | Status |
 |----------------|---------|--------|
-| `src/app/page.tsx` | Home page (Spreadsheet) | ✅ Ready |
-| `src/app/layout.tsx` | Root layout | ✅ Ready |
-| `src/app/globals.css` | Global styles | ✅ Ready |
-| `src/components/Spreadsheet.tsx` | Excel-like grid component | ✅ Ready |
-| `public/spreadsheet-offline.html` | Offline desktop version | ✅ Ready |
-| `.kilocode/` | AI context & recipes | ✅ Ready |
+| `src/app/layout.tsx` | Root layout + metadata + DynamicHeader | ✅ Ready |
+| `src/app/page.tsx` | Ana sayfa (hero + öne çıkan ürünler) | ✅ Ready |
+| `src/app/products/page.tsx` | Ürün listesi (filtre + arama) | ✅ Ready |
+| `src/app/products/[id]/page.tsx` | Ürün detay (benzer ürünler) | ✅ Ready |
+| `src/app/cart/page.tsx` | Sepet (adet güncelleme + özet) | ✅ Ready |
+| `src/components/Header.tsx` | Navigasyon + sepet ikonu | ✅ Ready |
+| `src/components/Footer.tsx` | Site footer + iletişim | ✅ Ready |
+| `src/components/ProductCard.tsx` | Ürün kartı (indirim + rating) | ✅ Ready |
+| `src/components/CartItem.tsx` | Sepet öğesi (adet + kaldır) | ✅ Ready |
+| `src/components/ClientLayout.tsx` | Header + children wrapper | ✅ Ready |
+| `src/components/DynamicHeader.tsx` | SSR bypass için dynamic wrapper | ✅ Ready |
+| `src/context/CartContext.tsx` | Sepet state + localStorage | ✅ Ready |
+| `src/data/products.ts` | Ürün verisi (8 ürün) | ✅ Ready |
+| `src/types/index.ts` | TypeScript tipleri | ✅ Ready |
+| `src/app/globals.css` | Global stiller + Tailwind | ✅ Ready |
 
-## Current Focus
+## Özellikler
 
-Spreadsheet component with text formatting support:
-- 10 columns (A-J) x 20 rows
-- Cell editing functionality
-- Keyboard navigation (Arrow keys, Tab, Enter)
-- Selected cell highlighting
-- Toolbar showing selected cell and value
-- Status bar with row/column count
-- Text formatting: bold, italic, underline, alignment (left/center/right)
-- File upload (JSON) and save (JSON) functionality
-- **Offline desktop version** - download as standalone HTML file
-- **NEW: Undo/Redo** - History tracking with Ctrl+Z / Ctrl+Y
-- **NEW: Font Size** - Change font size (10-36px)
-- **NEW: Text Color** - Change text color
-- **NEW: Background Color** - Change cell fill color
-- **NEW: Cell Borders** - Add borders (top, bottom, left, right, all)
+- **Ana Sayfa**: Hero bölümü, öne çıkan ürünler, neden bizi seçmelisiniz
+- **Ürünler**: Kategori filtreleme, arama, 8 örnek ürün
+- **Ürün Detay**: Breadcrumb, rating, adet seçimi, benzer ürünler
+- **Sepet**: Adet güncelleme, kaldırma, kargo hesaplama, özet
+- **Sepet Yönetimi**: localStorage ile kalıcı, sayfa yenilemede korunur
+- **Responsive**: Mobil uyumlu grid ve navigasyon
+- **Dil**: Tamamen Türkçe arayüz
 
-## Quick Start Guide
+## Routes
 
-### To add a new page:
+| Route | Açıklama |
+|-------|----------|
+| `/` | Ana sayfa |
+| `/products` | Ürün listesi |
+| `/products/[id]` | Ürün detay |
+| `/cart` | Sepetim |
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
+## Teknik Notlar
 
-### To add components:
-
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
-
-### To add a database:
-
-Follow `.kilocode/recipes/add-database.md`
-
-### To add API routes:
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Recipes
-
-| Recipe | File | Use Case |
-|--------|------|----------|
-| Add Database | `.kilocode/recipes/add-database.md` | Data persistence with Drizzle + SQLite |
-
-## Pending Improvements
-
-- [ ] Add more recipes (auth, email, etc.)
-- [ ] Add example components
-- [ ] Add testing setup recipe
+- Cart state: `localStorage` ile persist (React Context yerine)
+- Header: `next/dynamic` ile `ssr: false` (SSR sorununu önlemek için)
+- Client components: `useCart()` kullanan tüm bileşenler `"use client"` ile işaretli
+- Kargo: 5000 TL üzeri ücretsiz, altında 199 TL
 
 ## Session History
 
 | Date | Changes |
 |------|---------|
 | Initial | Template created with base setup |
-| 2026-02-28 | Added Excel-like spreadsheet component (Izgara Temalı Tablo) |
-| 2026-02-28 | Added text formatting toolbar (bold, italic, underline, alignment) |
-| 2026-02-28 | Added file upload and save functionality (JSON) |
-| 2026-03-01 | Added offline spreadsheet download (standalone HTML)
+| 2026-02-28 | Added Excel-like spreadsheet component |
+| 2026-02-28 | Added text formatting toolbar |
+| 2026-02-28 | Added file upload and save functionality |
+| 2026-03-01 | Added offline spreadsheet download |
+| 2026-08-03 | E-ticaret sitesi (Marketim) oluşturuldu |
